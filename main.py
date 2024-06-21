@@ -4,6 +4,9 @@ from psycopg2 import sql
 # Configurações de conexão
 conn_info = {
     'dbname': 'postgres',
+    'user': 'postgres.hzjwluwcmtzljlxhdmdt',
+    'password': 'cafecomLeitesDeCabra',
+    'host': 'aws-0-sa-east-1.pooler.supabase.com',
     'port': 6543 
 }
 
