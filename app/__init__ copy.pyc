@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -12,6 +12,11 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    @app.route('/usuarios')
+    def usuarios():
+        users = models.User.query.all()
+        return users
+
     @app.route('/tututubarao')
     def oque_eu_quiser():
         return "<h5> ALguma coisa</h5>"
@@ -20,6 +25,11 @@ def create_app():
     def registro():
         nome = request.form['nome']
         cpf = request.form['cpf']
+
+        novo_usuario = models.User(nome=nome, cpf=cpf)
+        db.session.add(novo_usuario)
+        db.session.commit()
+        
         return "O nome enviado é: " + nome + " e o cpf é: " + cpf
 
     @app.route("/")
