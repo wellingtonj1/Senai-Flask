@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -70,10 +70,13 @@ def create_app():
 
         for usuario in usuarios:
             html += f'''
-                        <li>
-                            <strong>{usuario.nome}</strong>
-                            <span class="cpf">CPF: {usuario.cpf}</span>
-                        </li>
+                <li>
+                    <strong>{usuario.nome}</strong>
+                    <span class="cpf">CPF: {usuario.cpf}</span>
+                    <div class="actions">
+                        <a href="/edit/{usuario.id}">Editar</a>
+                    </div>
+                </li>
             '''
 
         html += '''
@@ -94,6 +97,48 @@ def create_app():
         db.session.add(usuario)
         db.session.commit()
         return "Os dados foram salvos e o nome enviado é: " + nome_pessoa + " e o cpf é: " + cpf_pessoa
+
+    @app.route('/edit/<int:id>', methods=['GET', 'POST'])
+    def edit_user(id):
+        usuario = models.User.query.get_or_404(id)
+        
+        if request.method == 'POST':
+            usuario.nome = request.form['nome']
+            usuario.cpf = request.form['cpf']
+            db.session.commit()
+            return redirect('/usuarios')
+
+        return '''
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Editar Usuário</title>
+            </head>
+            <body>
+                <h2>Editar Usuário</h2>
+                <form action="/edit/{id}" method="post">
+                    <label for="nome">Nome:</label><br>
+                    <input type="text" id="nome" name="nome" value="{nome}" required><br><br>
+                    
+                    <label for="cpf">CPF:</label><br>
+                    <input type="text" id="cpf" name="cpf" value="{cpf}" placeholder="000.000.000-00" required><br><br>
+                    
+                    <input type="submit" value="Salvar">
+                </form>
+                <a href="/usuarios">Voltar para a lista de usuários</a>
+            </body>
+            </html>
+        '''.format(id=usuario.id, nome=usuario.nome, cpf=usuario.cpf)
+
+    @app.route('/delete/<int:id>', methods=['POST'])
+    def delete_user(id):
+        usuario = models.User.query.get_or_404(id)
+        db.session.delete(usuario)
+        db.session.commit()
+        return redirect('/usuarios')
+
 
     @app.route("/")
     def pagina_inicial():

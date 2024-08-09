@@ -1,6 +1,7 @@
 Flask 
 Flask-SQLAlchemy
 Flask-Migrate 
-psycopg2-binary 
 python-dotenv
 asyncpg
+mysqlclient
+PyMySQL
