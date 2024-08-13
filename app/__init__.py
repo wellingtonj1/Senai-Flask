@@ -14,7 +14,7 @@ def create_app():
     migrate.init_app(app, db)
 
     @app.route('/usuarios')
-    def oque_eu_quiser():
+    def lista_usuarios():
         usuarios = models.User.query.all()
         html = '''
             <!DOCTYPE html>
@@ -75,6 +75,7 @@ def create_app():
                     <span class="cpf">CPF: {usuario.cpf}</span>
                     <div class="actions">
                         <a href="/edit/{usuario.id}">Editar</a>
+                        <a href="" data-id="{usuario.id}" class="remover-usuario">Remover</a>
                     </div>
                 </li>
             '''
@@ -83,13 +84,57 @@ def create_app():
                     </ul>
                 </div>
             </body>
+
+            <script>
+                 document.addEventListener('DOMContentLoaded', function() {
+                    // Seleciona todos os elementos com a classe 'remover-usuario'
+                    var elementos = document.querySelectorAll('.remover-usuario');
+                    
+                    // Itera sobre os elementos e adiciona um evento de clique a cada um
+                    elementos.forEach(function(elemento) {
+                        elemento.addEventListener('click', function(event) {
+                            // Previne o comportamento padrão do link (se for um link)
+                            event.preventDefault();
+
+                            // Obtém o valor do data-id do elemento clicado
+                            var id = elemento.getAttribute('data-id');
+                            
+                            if (id) {
+                                // Configura a URL para a requisição POST
+                                var url = '/delete/' + encodeURIComponent(id);
+                                
+                                // Cria uma nova requisição POST
+                                var xhr = new XMLHttpRequest();
+                                xhr.open('POST', url, true);
+                                xhr.setRequestHeader('Content-Type', 'application/json');
+                                
+                                // Define o que fazer quando a requisição for completada
+                                xhr.onload = function() {
+                                    if (xhr.status === 200) {
+                                        console.log('Usuário removido com sucesso');
+                                        window.location.reload();
+                                    } else {
+                                        console.error('Erro ao remover o usuário');
+                                    }
+                                };
+                                
+                                // Envia a requisição
+                                xhr.send();
+                            } else {
+                                console.error('ID não encontrado no atributo data-id');
+                            }
+                        });
+                    });
+                });
+            </script>
+
             </html>
         '''
 
         return html
 
     @app.route('/register', methods=['POST'])
-    def registro():
+    def registra_usuario():
         nome_pessoa = request.form['nome']
         cpf_pessoa = request.form['cpf']
 
@@ -99,7 +144,7 @@ def create_app():
         return "Os dados foram salvos e o nome enviado é: " + nome_pessoa + " e o cpf é: " + cpf_pessoa
 
     @app.route('/edit/<int:id>', methods=['GET', 'POST'])
-    def edit_user(id):
+    def edita_usuario(id):
         usuario = models.User.query.get_or_404(id)
         
         if request.method == 'POST':
@@ -133,7 +178,7 @@ def create_app():
         '''.format(id=usuario.id, nome=usuario.nome, cpf=usuario.cpf)
 
     @app.route('/delete/<int:id>', methods=['POST'])
-    def delete_user(id):
+    def deleta_usuario(id):
         usuario = models.User.query.get_or_404(id)
         db.session.delete(usuario)
         db.session.commit()
